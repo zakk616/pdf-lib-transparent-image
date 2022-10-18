@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+
+    <style>
+      body {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      button {
+        background-color: #008cba;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <button onclick="embedImages()">Create PDF</button>
+  </body>
+
+  <script>
+    const { PDFDocument } = PDFLib;
+
+    async function embedImages() {
+      // Fetch PNG image
+      const pngUrl = "sign.png";
+      const pngImageBytes = await fetch(pngUrl).then((res) =>
+        res.arrayBuffer()
+      );
+
+      const pdfDoc = await PDFDocument.create();
+      const pngImage = await pdfDoc.embedPng(pngImageBytes);
+
+      // Get the width/height of the PNG image scaled down to 50% of its original size
+      const pngDims = pngImage.scale(0.5);
+
+      // Add a blank page to the document
+      const page = pdfDoc.addPage();
+
+      // Draw the PNG image near the lower right corner of the JPG image
+      page.drawImage(pngImage, {
+        x: page.getWidth() / 2 - pngDims.width / 2,
+        y: page.getHeight() / 2,
+        width: pngDims.width,
+        height: pngDims.height,
+      });
+
+      // Serialize the PDFDocument to bytes (a Uint8Array)
+      const pdfBytes = await pdfDoc.save();
+
+      // Trigger the browser to download the PDF document
+      download(
+        pdfBytes,
+        "pdf-lib_image_embedding_example.pdf",
+        "application/pdf"
+      );
+    }
+  </script>
+</html>
